@@ -131,6 +131,8 @@ int appVersion = consentState.getVersion(); // in which app version has the cons
 boolean canCollectPersonalInformation = GDPR.getInstance().canCollectPersonalInformation();
 // Check if the user is within EEA or Unknwon
 boolean isUserWithinEEAOrUnknwon = GDPR.getInstance().isUserWithinEEAOrUnknwon();
+// Check if the consent is personalized or non-personalized
+boolean isConsentPersonalized = GDPR.getInstance().isConsentPersonalized();
 ```
 
 Check out the [MinimalDemo](https://github.com/MFlisar/GDPRDialog/blob/master/app/src/main/java/com/michaelflisar/gdprdialog/demo/MinimalDemoActivity.java) to get something to start with or check out the [DemoActivity](https://github.com/MFlisar/GDPRDialog/blob/master/app/src/main/java/com/michaelflisar/gdprdialog/demo/DemoActivity.java) with the [example setups](https://github.com/MFlisar/GDPRDialog/blob/master/app/src/main/java/com/michaelflisar/gdprdialog/demo/SetupActivity.java) for a more complex example
