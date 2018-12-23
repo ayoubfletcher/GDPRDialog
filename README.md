@@ -72,10 +72,19 @@ GDPRSetup setup = new GDPRSetup(GDPRDefinitions.ADMOB) // add all networks you u
     .withLoadAdMobNetworks(publisherId(s)) // e.g. "pub-0123456789012345"
     .withNoToolbarTheme(noToolbarTheme)
     .withShowPaidOrFreeInfoText(true) // show the info that this app is cheap/free based on the networks or hide it
+    // Customize the dialog for your needs
+    .withShowAgeMessage(true) // To show the age confirmation message, (disabled by default)
+    .withCustomAgeMessage("By agreeing, you are comfirming ...") // To show a custom age confirmation message
+    .withCustomQuestionMessage("Can we continue to use your data ...") // To show a custom question message
+    .withCustomMainMessage(">We use ads in this app. These services ... <a href=\"\">Learn more</a>") // To show a custom main message
+    .withCustomSecondaryMessage("We care about your privacy and data security.") // To show a custom secondary message
+    .withDarkThemeDialog() // Use dark theme dialog
+    .withCustomTitle("Data Protection Consent") // To show a custom dialog title
 ;
+// The implementation of this method in 3.a
 GDPR.getInstance().checkIfNeedsToBeShown(this /* extends AppCompatActivity & GDPR.IGDPRCallback */, setup);
 ```
-3. implement the `GDPR.IGDPRCallback` in your activity
+3.a implement the `GDPR.IGDPRCallback` in your activity
 ```java
 public class ExampleActivity extends AppCompatActivity implements GDPR.IGDPRCallback {
     @Override
@@ -91,6 +100,23 @@ public class ExampleActivity extends AppCompatActivity implements GDPR.IGDPRCall
     }
 }
 ```
+3.b Second method without implementating GDPR.IGDPRCallback into the activity
+```java
+GDPR.getInstance().checkIfNeedsToBeShown(this, mSetup, new GDPR.IGDPRCallback() {
+    @Override
+    public void onConsentNeedsToBeRequested(GDPRPreperationData data) {
+        // handle consent here
+
+    }
+
+    @Override
+    public void onConsentInfoUpdate(GDPRConsentState consentState, boolean isNewState) {
+        // we need to get consent, so we show the dialog here
+        GDPR.getInstance().showDialog(activity, mSetup);
+    }
+});
+```
+
 4. Other usages
 ```java
 // get current consent anywhere in the app after user has given consent
@@ -102,6 +128,8 @@ long date = consentState.getDate(); // when has the given consent been given
 int appVersion = consentState.getVersion(); // in which app version has the consent been given
 // check if you can use personal informations or not
 boolean canCollectPersonalInformation = GDPR.getInstance().canCollectPersonalInformation();
+// Check if the user is within EEA or Unknwon
+boolean isUserWithinEEAOrUnknwon = GDPR.getInstance().isUserWithinEEAOrUnknwon();
 ```
 
 Check out the [MinimalDemo](https://github.com/MFlisar/GDPRDialog/blob/master/app/src/main/java/com/michaelflisar/gdprdialog/demo/MinimalDemoActivity.java) to get something to start with or check out the [DemoActivity](https://github.com/MFlisar/GDPRDialog/blob/master/app/src/main/java/com/michaelflisar/gdprdialog/demo/DemoActivity.java) with the [example setups](https://github.com/MFlisar/GDPRDialog/blob/master/app/src/main/java/com/michaelflisar/gdprdialog/demo/SetupActivity.java) for a more complex example
