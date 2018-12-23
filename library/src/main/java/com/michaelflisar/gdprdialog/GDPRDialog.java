@@ -40,7 +40,11 @@ public class GDPRDialog extends AppCompatDialogFragment
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
         setCancelable(false);
-        mViewManager.setCallback(getActivity(), mForceActivityToImplementCallback);
+        if(GDPR.getInstance().getCallback() != null) {
+            mViewManager.setCallback(GDPR.getInstance().getCallback(), mForceActivityToImplementCallback);
+        } else {
+            mViewManager.setCallback(getActivity(), mForceActivityToImplementCallback);
+        }
     }
 
     @Override

@@ -2,6 +2,7 @@ package com.michaelflisar.gdprdialog.helper;
 
 import android.app.Activity;
 import android.os.AsyncTask;
+import android.util.Log;
 
 import com.michaelflisar.gdprdialog.GDPR;
 import com.michaelflisar.gdprdialog.GDPRConsent;
@@ -15,12 +16,12 @@ import java.lang.ref.WeakReference;
 public class PreperationAsyncTaskCI extends AsyncTask<Object, Void, GDPRPreperationData> {
 
     private WeakReference<Activity> mActivity;
-    private GDPR.IGDPRCallback igdprCallback;
+    private WeakReference<GDPR.IGDPRCallback> migdprCallback;
     private GDPRSetup mSetup;
 
     public PreperationAsyncTaskCI(Activity activity, GDPRSetup setup, GDPR.IGDPRCallback igdprCallback) {
         mActivity = new WeakReference<>(activity);
-        this.igdprCallback = igdprCallback;
+        this.migdprCallback = new WeakReference<>(igdprCallback);
         mSetup = setup;
     }
 
@@ -92,15 +93,20 @@ public class PreperationAsyncTaskCI extends AsyncTask<Object, Void, GDPRPreperat
             return;
         }
         Activity activity = mActivity.get();
+        GDPR.IGDPRCallback igdprCallback = migdprCallback.get();
+        Log.d("MurdieX", "Prepare task!");
         if (activity != null && !activity.isFinishing()) {
             if (mSetup.requestLocationChecks().length > 0 && result.getLocation() == GDPRLocation.NOT_IN_EAA) {
                 // user does want to not request consent and consider this as consent given, so we save this here
                 GDPRConsentState consentState = new GDPRConsentState(activity, GDPRConsent.AUTOMATIC_PERSONAL_CONSENT, result.getLocation());
                 GDPR.getInstance().setConsent(consentState);
+                Log.d("MurdieX", "Trigger new state!");
                 igdprCallback.onConsentInfoUpdate(consentState, true);
             } else {
                 igdprCallback.onConsentNeedsToBeRequested(result);
             }
+        } else {
+            Log.d("MurdieX", "Activity is finished!");
         }
     }
 }

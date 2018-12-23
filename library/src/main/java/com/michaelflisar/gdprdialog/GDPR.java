@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 
 import com.michaelflisar.gdprdialog.helper.PreperationAsyncTask;
 import com.michaelflisar.gdprdialog.helper.GDPRPreperationData;
@@ -42,6 +43,8 @@ public class GDPR {
 
     private PreperationAsyncTask mPreperationAsyncTask = null;
     private PreperationAsyncTaskCI mPreperationAsyncTaskCI = null;
+
+    private IGDPRCallback mCallback = null;
 
     // ------------------
     // GDPR - init
@@ -124,6 +127,9 @@ public class GDPR {
      */
     public void checkIfNeedsToBeShown(Activity activity, GDPRSetup setup, IGDPRCallback igdprCallback) {
         checkIsInitialised();
+
+        // Set the callback
+        GDPR.getInstance().setCallback(igdprCallback);
 
         GDPRConsentState consent = getConsentState();
         boolean checkConsent = false;
@@ -269,12 +275,12 @@ public class GDPR {
                 // in this case, activity will be destroyed, we ignore this call
                 return;
             }
-            showDialog(fm, activity, setup, location);
+            showDialog(fm, setup, location);
         } catch (NoSuchMethodError e) {
             // Support Library Version < 26.1.0 is used, isStateSaved is not yet existing...
             // we just catch the exception and ignore it
             try {
-                showDialog(fm, activity, setup, location);
+                showDialog(fm, setup, location);
             } catch (IllegalStateException e2) {
                 // ignored, activity is probably just being destroyed...
             }
@@ -302,24 +308,24 @@ public class GDPR {
                 // in this case, activity will be destroyed, we ignore this call
                 return;
             }
-            showDialog(fm, activity, setup, location, forceActivityToImplementCallback);
+            showDialog(fm, setup, location, forceActivityToImplementCallback);
         } catch (NoSuchMethodError e) {
             // Support Library Version < 26.1.0 is used, isStateSaved is not yet existing...
             // we just catch the exception and ignore it
             try {
-                showDialog(fm, activity, setup, location, forceActivityToImplementCallback);
+                showDialog(fm, setup, location, forceActivityToImplementCallback);
             } catch (IllegalStateException e2) {
                 // ignored, activity is probably just being destroyed...
             }
         }
     }
 
-    private void showDialog(FragmentManager fm, AppCompatActivity activity, GDPRSetup setup, GDPRLocation location) {
+    private void showDialog(FragmentManager fm, GDPRSetup setup, GDPRLocation location) {
         GDPRDialog dlg = GDPRDialog.newInstance(setup, location);
         dlg.show(fm, GDPRDialog.class.getName());
     }
 
-    private void showDialog(FragmentManager fm, AppCompatActivity activity, GDPRSetup setup, GDPRLocation location, boolean forceActivityToImplementCallback) {
+    private void showDialog(FragmentManager fm, GDPRSetup setup, GDPRLocation location, boolean forceActivityToImplementCallback) {
         GDPRDialog dlg = GDPRDialog.newInstance(setup, location, forceActivityToImplementCallback);
         dlg.show(fm, GDPRDialog.class.getName());
     }
@@ -350,6 +356,14 @@ public class GDPR {
         if (mPreferences == null) {
             throw new RuntimeException("You have not initialised GDPR. Plase call 'GDPR.getInstance().init(context)' once from anywhere, preferable from your application.");
         }
+    }
+
+    public void setCallback(IGDPRCallback callback) {
+        mCallback = callback;
+    }
+
+    public IGDPRCallback getCallback() {
+        return mCallback;
     }
 
     // ------------------
