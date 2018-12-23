@@ -1,5 +1,6 @@
 package com.michaelflisar.gdprdialog;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.support.v4.app.FragmentManager;
@@ -7,6 +8,9 @@ import android.support.v7.app.AppCompatActivity;
 
 import com.michaelflisar.gdprdialog.helper.PreperationAsyncTask;
 import com.michaelflisar.gdprdialog.helper.GDPRPreperationData;
+import com.michaelflisar.gdprdialog.helper.PreperationAsyncTaskCI;
+
+import static com.michaelflisar.gdprdialog.GDPRLocation.IN_EAA_OR_UNKNOWN;
 
 public class GDPR {
 
@@ -37,6 +41,7 @@ public class GDPR {
     private GDPRConsentState mCachedConsent = null;
 
     private PreperationAsyncTask mPreperationAsyncTask = null;
+    private PreperationAsyncTaskCI mPreperationAsyncTaskCI = null;
 
     // ------------------
     // GDPR - init
@@ -108,12 +113,63 @@ public class GDPR {
     }
 
     /**
+     * Checks if you must require consent from the user
+     * <p>
+     * it will call the callback {@link IGDPRCallback#onConsentNeedsToBeRequested(GDPRPreperationData)} function if the
+     * user should be asked for consent, otherwise it will directly call the {@link IGDPRCallback#onConsentInfoUpdate(GDPRConsentState, boolean)} function
+     *
+     * @param activity  activity
+     * @param setup     the setup
+     * @param igdprCallback callback
+     */
+    public void checkIfNeedsToBeShown(Activity activity, GDPRSetup setup, IGDPRCallback igdprCallback) {
+        checkIsInitialised();
+
+        GDPRConsentState consent = getConsentState();
+        boolean checkConsent = false;
+        switch (consent.getConsent()) {
+            case UNKNOWN:
+                checkConsent = true;
+                break;
+            case NO_CONSENT:
+                if (!setup.allowAnyNoConsent()) {
+                    checkConsent = true;
+                    break;
+                }
+                break;
+            case NON_PERSONAL_CONSENT_ONLY:
+            case PERSONAL_CONSENT:
+            case AUTOMATIC_PERSONAL_CONSENT:
+                break;
+        }
+
+        mLogger.debug("GDPR", String.format("consent check needed: %b, current consent: %s", checkConsent, consent.logString()));
+
+        if (checkConsent) {
+            if (setup.needsPreperation()) {
+                mPreperationAsyncTaskCI = new PreperationAsyncTaskCI(activity, setup, igdprCallback);
+                mPreperationAsyncTaskCI.execute();
+            } else {
+                igdprCallback.onConsentNeedsToBeRequested(new GDPRPreperationData().setUndefined());
+            }
+        } else {
+            // nothing to do, we already know the users decision!
+            // simple forward this information to the listener
+            igdprCallback.onConsentInfoUpdate(consent, false);
+        }
+    }
+
+    /**
      * cancels running task, i.e. the task that checks the location and/or loads the admob networks from the internet
      */
     public void cancelRunningTasks() {
         if (mPreperationAsyncTask != null) {
             mPreperationAsyncTask.cancel(true);
             mPreperationAsyncTask = null;
+        }
+        if (mPreperationAsyncTaskCI != null) {
+            mPreperationAsyncTaskCI.cancel(true);
+            mPreperationAsyncTaskCI = null;
         }
     }
 
@@ -147,6 +203,14 @@ public class GDPR {
         } else {
             return false;
         }
+    }
+
+    /**
+     * return a quick to check if the user is within EEA or Unknown
+     * @return true, if use is within EEA or Unknown
+     */
+    public boolean isUserWithinEEAOrUnknwon() {
+        return getConsentState().getLocation() == IN_EAA_OR_UNKNOWN;
     }
 
     /**
@@ -209,8 +273,46 @@ public class GDPR {
         }
     }
 
+    /**
+     * shows the consent dialog
+     *
+     * @param activity the parent activity of the dialog
+     * @param setup the setup for the dialog
+     * @param location the request location
+     * @param forceActivityToImplementCallback the toggle for forcing implementing GDPR.IGDPRCallback
+     *                                         into activity added to support callback within
+     *                                         checkIfNeedsToBeShown by itself
+     */
+    public void showDialog(AppCompatActivity activity, GDPRSetup setup, GDPRLocation location, boolean forceActivityToImplementCallback) {
+        FragmentManager fm = activity.getSupportFragmentManager();
+        if (fm.findFragmentByTag(GDPRDialog.class.getName()) != null) {
+            // dialog already exists, it either is already shown or will be shown automatically if activity is recreated
+            return;
+        }
+        try {
+            if (fm.isStateSaved()) {
+                // in this case, activity will be destroyed, we ignore this call
+                return;
+            }
+            showDialog(fm, activity, setup, location, forceActivityToImplementCallback);
+        } catch (NoSuchMethodError e) {
+            // Support Library Version < 26.1.0 is used, isStateSaved is not yet existing...
+            // we just catch the exception and ignore it
+            try {
+                showDialog(fm, activity, setup, location, forceActivityToImplementCallback);
+            } catch (IllegalStateException e2) {
+                // ignored, activity is probably just being destroyed...
+            }
+        }
+    }
+
     private void showDialog(FragmentManager fm, AppCompatActivity activity, GDPRSetup setup, GDPRLocation location) {
         GDPRDialog dlg = GDPRDialog.newInstance(setup, location);
+        dlg.show(fm, GDPRDialog.class.getName());
+    }
+
+    private void showDialog(FragmentManager fm, AppCompatActivity activity, GDPRSetup setup, GDPRLocation location, boolean forceActivityToImplementCallback) {
+        GDPRDialog dlg = GDPRDialog.newInstance(setup, location, forceActivityToImplementCallback);
         dlg.show(fm, GDPRDialog.class.getName());
     }
 

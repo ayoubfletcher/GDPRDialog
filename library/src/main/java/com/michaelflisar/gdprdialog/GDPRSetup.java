@@ -17,6 +17,12 @@ public class GDPRSetup implements Parcelable {
     private boolean mAllowNoConsent = false;
     private GDPRNetwork mNetworks[];
     private boolean mExplicitAgeConfirmation = false;
+    private boolean mShowAgeMessage = true;
+    private String mCustomTitle = "";
+    private String mCustomMainMessage = "";
+    private String mCustomQuestionMessage = "";
+    private String mCustomSecondaryMessage = "";
+    private String mCustomAgeMessage = "";
     private boolean mExplicitNonPersonalisedConfirmation = false;
     private boolean mNoToolbarTheme = false;
     private GDPRLocationCheck mRequestLocationChecks[];
@@ -94,6 +100,75 @@ public class GDPRSetup implements Parcelable {
      */
     public GDPRSetup withExplicitAgeConfirmation(boolean explicitAgeConfirmation) {
         mExplicitAgeConfirmation = explicitAgeConfirmation;
+        return this;
+    }
+
+    /**
+     * use this to show the age message if not set age will not show up
+     * @param showAgeMessage true, will show the age message
+     * @return this
+     */
+    public GDPRSetup withShowAgeMessage(boolean showAgeMessage) {
+        mShowAgeMessage = showAgeMessage;
+        return this;
+    }
+
+    /**
+     * Use this to set custom main message
+     * @param customMainMessage custom message
+     * @return this
+     */
+    public GDPRSetup withCustomMainMessage(String customMainMessage) {
+        mCustomMainMessage = customMainMessage;
+        return this;
+    }
+
+    /**
+     * Use this to set custom question message
+     * @param customQuestionMessage custom question message
+     * @return this
+     */
+    public GDPRSetup withCustomQuestionMessage(String customQuestionMessage) {
+        mCustomQuestionMessage = customQuestionMessage;
+        return this;
+    }
+
+    /**
+     * Use this to set a custom message for the secondary message
+     * @param customSecondaryMessage secondary message
+     * @return this
+     */
+    public GDPRSetup withCustomSecondaryMessage(String customSecondaryMessage) {
+        mCustomSecondaryMessage = customSecondaryMessage;
+        return this;
+    }
+
+    /**
+     * Use this to set a custom message for the age message
+     * @param customAgeMessage custom age message
+     * @return
+     */
+    public GDPRSetup withCustomAgeMessage(String customAgeMessage) {
+        mCustomAgeMessage = customAgeMessage;
+        return this;
+    }
+
+    /**
+     * Use this to set a custom title for the dialog
+     * @param customTitle custom title
+     * @return this
+     */
+    public GDPRSetup withCustomTitle(String customTitle) {
+        mCustomTitle = customTitle;
+        return this;
+    }
+
+    /**
+     * Use this for a quick alert dialog dark theme
+     * @return this
+     */
+    public GDPRSetup withDarkThemeDialog() {
+        withCustomDialogTheme(R.style.AlertDialogDark);
         return this;
     }
 
@@ -253,6 +328,30 @@ public class GDPRSetup implements Parcelable {
 
     public final boolean explicitAgeConfirmation() {
         return mExplicitAgeConfirmation;
+    }
+
+    public final boolean showAgeMessage() {
+        return mShowAgeMessage;
+    }
+
+    public final String getCustomMainMessage() {
+        return mCustomMainMessage;
+    }
+
+    public final String getCustomQuestionMessage() {
+        return mCustomQuestionMessage;
+    }
+
+    public final String getCustomSecondaryMessage() {
+        return mCustomSecondaryMessage;
+    }
+
+    public final String getCustomAgeMessage() {
+        return mCustomAgeMessage;
+    }
+
+    public final String getCustomTitle() {
+        return mCustomTitle;
     }
 
     public final boolean explicitNonPersonalisedConfirmation() {

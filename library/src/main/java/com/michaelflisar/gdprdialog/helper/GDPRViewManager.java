@@ -19,6 +19,7 @@ import android.text.style.ForegroundColorSpan;
 import android.text.style.RelativeSizeSpan;
 import android.text.style.StyleSpan;
 import android.text.style.URLSpan;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.Button;
@@ -135,7 +136,13 @@ public class GDPRViewManager {
     public void init(Activity activity, View view, IOnFinishView onFinishViewListener) {
         final Toolbar toolbar = view.findViewById(R.id.toolbar);
         toolbar.setVisibility((shouldUseBottomSheet() || mSetup.noToolbarTheme()) ? View.VISIBLE : View.GONE);
-        toolbar.setTitle(R.string.gdpr_dialog_title);
+
+        // Dialog title
+        if(mSetup.getCustomTitle().isEmpty()) {
+            toolbar.setTitle(R.string.gdpr_dialog_title);
+        } else {
+            toolbar.setTitle(mSetup.getCustomTitle());
+        }
 
         mPages.add(view.findViewById(R.id.llPage0));
         mPages.add(view.findViewById(R.id.llPage1));
@@ -276,38 +283,63 @@ public class GDPRViewManager {
 
     private void initGeneralTexts(Activity activity, TextView tvQuestion, TextView tvText1, TextView tvText2, TextView tvText3, CheckBox cbAge) {
 
-        String question = activity.getString(R.string.gdpr_dialog_question, (mSetup.containsAdNetwork() && !mSetup.shortQuestion()) ? activity.getString(R.string.gdpr_dialog_question_ads_info) : "");
-        tvQuestion.setText(Html.fromHtml(question));
-
-        String cheapOrFree = activity.getString(mSetup.hasPaidVersion() ? R.string.gdpr_cheap : R.string.gdpr_free);
-        String text1 = activity.getString(R.string.gdpr_dialog_text1_part1);
-        if (mSetup.showPaidOrFreeInfoText()) {
-            text1 += " " + activity.getString(R.string.gdpr_dialog_text1_part2, cheapOrFree);
+        // Initialize question message
+        if(mSetup.getCustomQuestionMessage().isEmpty()) {
+            String question = activity.getString(R.string.gdpr_dialog_question, (mSetup.containsAdNetwork() && !mSetup.shortQuestion()) ? activity.getString(R.string.gdpr_dialog_question_ads_info) : "");
+            tvQuestion.setText(Html.fromHtml(question));
+        } else {
+            tvQuestion.setText(mSetup.getCustomQuestionMessage());
         }
-        tvText1.setText(Html.fromHtml(text1));
+
+        // Secondary message
+        if(mSetup.getCustomSecondaryMessage().isEmpty()) {
+            String cheapOrFree = activity.getString(mSetup.hasPaidVersion() ? R.string.gdpr_cheap : R.string.gdpr_free);
+            String text1 = activity.getString(R.string.gdpr_dialog_text1_part1);
+            if (mSetup.showPaidOrFreeInfoText()) {
+                text1 += " " + activity.getString(R.string.gdpr_dialog_text1_part2, cheapOrFree);
+            }
+            tvText1.setText(Html.fromHtml(text1));
+        } else {
+            tvText1.setText(Html.fromHtml(mSetup.getCustomSecondaryMessage()));
+        }
         tvText1.setMovementMethod(LinkMovementMethod.getInstance());
 
-        int typesCount = mSetup.getNetworkTypes().size();
-        String types = mSetup.getNetworkTypesCommaSeperated(activity);
-        String text2 = typesCount == 1 ?
-                activity.getString(R.string.gdpr_dialog_text2_singular, types) :
-                activity.getString(R.string.gdpr_dialog_text2_plural, types);
-        CharSequence sequence2 = Html.fromHtml(text2);
-        SpannableStringBuilder strBuilder2 = new SpannableStringBuilder(sequence2);
-        URLSpan[] urls = strBuilder2.getSpans(0, sequence2.length(), URLSpan.class);
-        for(URLSpan span : urls) {
-            makeLinkClickable(strBuilder2, span, () -> {
-                mCurrentStep = 1;
-                updateSelectedPage();
-            });
+        // Main message
+        if(mSetup.getCustomMainMessage().isEmpty()) {
+            int typesCount = mSetup.getNetworkTypes().size();
+            String types = mSetup.getNetworkTypesCommaSeperated(activity);
+            String text2 = typesCount == 1 ?
+                    activity.getString(R.string.gdpr_dialog_text2_singular, types) :
+                    activity.getString(R.string.gdpr_dialog_text2_plural, types);
+            CharSequence sequence2 = Html.fromHtml(text2);
+            SpannableStringBuilder strBuilder2 = new SpannableStringBuilder(sequence2);
+            URLSpan[] urls = strBuilder2.getSpans(0, sequence2.length(), URLSpan.class);
+            for(URLSpan span : urls) {
+                makeLinkClickable(strBuilder2, span, () -> {
+                    mCurrentStep = 1;
+                    updateSelectedPage();
+                });
+            }
+            tvText2.setText(strBuilder2);
+        } else {
+            tvText2.setText(Html.fromHtml(mSetup.getCustomMainMessage()));
         }
-        tvText2.setText(strBuilder2);
         tvText2.setMovementMethod(LinkMovementMethod.getInstance());
 
-        String text3 = activity.getString(R.string.gdpr_dialog_text3);
-        tvText3.setText(Html.fromHtml(text3));
-        tvText3.setMovementMethod(LinkMovementMethod.getInstance());
+        // Age message
+        if(mSetup.showAgeMessage()) {
+            if(mSetup.getCustomAgeMessage().isEmpty()) {
+                String text3 = activity.getString(R.string.gdpr_dialog_text3);
+                tvText3.setText(Html.fromHtml(text3));
+            } else {
+                tvText3.setText(Html.fromHtml(mSetup.getCustomAgeMessage()));
+            }
+            tvText3.setMovementMethod(LinkMovementMethod.getInstance());
+        } else {
+            tvText3.setVisibility(View.GONE);
+        }
 
+        // Age checkbox confirmation
         if (!mSetup.explicitAgeConfirmation()) {
             cbAge.setVisibility(View.GONE);
         } else {

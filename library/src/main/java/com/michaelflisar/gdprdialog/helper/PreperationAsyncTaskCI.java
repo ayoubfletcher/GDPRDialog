@@ -1,7 +1,7 @@
 package com.michaelflisar.gdprdialog.helper;
 
+import android.app.Activity;
 import android.os.AsyncTask;
-import android.support.v7.app.AppCompatActivity;
 
 import com.michaelflisar.gdprdialog.GDPR;
 import com.michaelflisar.gdprdialog.GDPRConsent;
@@ -11,22 +11,23 @@ import com.michaelflisar.gdprdialog.GDPRLocationCheck;
 import com.michaelflisar.gdprdialog.GDPRSetup;
 
 import java.lang.ref.WeakReference;
-import java.util.ArrayList;
 
-public class PreperationAsyncTask<T extends AppCompatActivity & GDPR.IGDPRCallback> extends AsyncTask<Object, Void, GDPRPreperationData> {
+public class PreperationAsyncTaskCI extends AsyncTask<Object, Void, GDPRPreperationData> {
 
-    private WeakReference<T> mActivity;
+    private WeakReference<Activity> mActivity;
+    private GDPR.IGDPRCallback igdprCallback;
     private GDPRSetup mSetup;
 
-    public PreperationAsyncTask(T activity, GDPRSetup setup) {
+    public PreperationAsyncTaskCI(Activity activity, GDPRSetup setup, GDPR.IGDPRCallback igdprCallback) {
         mActivity = new WeakReference<>(activity);
+        this.igdprCallback = igdprCallback;
         mSetup = setup;
     }
 
     protected GDPRPreperationData doInBackground(Object... ignored) {
         GDPRPreperationData result = new GDPRPreperationData();
         GDPRLocationCheck[] checks = mSetup.requestLocationChecks();
-        T activity = mActivity.get();
+        Activity activity = mActivity.get();
 
         // 1) preperation
         boolean loadAdNetworks = mSetup.getPublisherIds().size() > 0;
@@ -81,7 +82,7 @@ public class PreperationAsyncTask<T extends AppCompatActivity & GDPR.IGDPRCallba
             }
         }
 
-        GDPR.getInstance().getLogger().debug("PreperationAsyncTask", String.format("GDPRPreperationData: %s", result.logString()));
+        GDPR.getInstance().getLogger().debug("PreperationAsyncTaskCI", String.format("GDPRPreperationData: %s", result.logString()));
 
         return result;
     }
@@ -90,15 +91,15 @@ public class PreperationAsyncTask<T extends AppCompatActivity & GDPR.IGDPRCallba
         if (isCancelled()) {
             return;
         }
-        T activity = mActivity.get();
+        Activity activity = mActivity.get();
         if (activity != null && !activity.isFinishing()) {
             if (mSetup.requestLocationChecks().length > 0 && result.getLocation() == GDPRLocation.NOT_IN_EAA) {
                 // user does want to not request consent and consider this as consent given, so we save this here
                 GDPRConsentState consentState = new GDPRConsentState(activity, GDPRConsent.AUTOMATIC_PERSONAL_CONSENT, result.getLocation());
                 GDPR.getInstance().setConsent(consentState);
-                activity.onConsentInfoUpdate(consentState, true);
+                igdprCallback.onConsentInfoUpdate(consentState, true);
             } else {
-                activity.onConsentNeedsToBeRequested(result);
+                igdprCallback.onConsentNeedsToBeRequested(result);
             }
         }
     }

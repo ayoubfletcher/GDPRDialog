@@ -33,7 +33,11 @@ public abstract class GDPRActivity extends AppCompatActivity implements GDPR.IGD
         View view = initView(LayoutInflater.from(this), null);
         setContentView(view);
 
-        getSupportActionBar().setTitle(R.string.gdpr_dialog_title);
+        if(mViewManager.getSetup().getCustomTitle().isEmpty()) {
+            getSupportActionBar().setTitle(R.string.gdpr_dialog_title);
+        } else {
+            getSupportActionBar().setTitle(mViewManager.getSetup().getCustomTitle());
+        }
     }
 
     @Override
