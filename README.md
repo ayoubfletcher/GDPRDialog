@@ -113,9 +113,26 @@ GDPR.getInstance().checkIfNeedsToBeShown(this, mSetup, new GDPR.IGDPRCallback() 
     @Override
     public void onConsentInfoUpdate(GDPRConsentState consentState, boolean isNewState) {
         // we need to get consent, so we show the dialog here
-        GDPR.getInstance().showDialog(activity, mSetup);
+        GDPR.getInstance().showDialog(activity, mSetup, false);
     }
 });
+```
+3.c Manualy requesting the dialog whithout checkIfNeedsToBeShown method
+```java
+// Set callback
+GDPR.getInstance().setCallback(new IGDPRCallback() {
+    @Override
+    public void onConsentInfoUpdate(GDPRConsentState consentState, boolean isNewState) {
+	// handler conset here
+    }
+    
+    @Override
+    public void onConsentNeedsToBeRequested(GDPRPreperationData data) {
+	GDPR.getInstance().showDialog(activity, setup, GDPR.getInstance().consentState.location, false); 
+    }
+});
+// To request the dialog
+GDPR.getInstance().showDialog(activity, setup, GDPR.getInstance().consentState.location, false);
 ```
 
 4. Other usages
