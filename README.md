@@ -1,4 +1,4 @@
-### GDPRDialog [![Release](https://jitpack.io/v/MFlisar/GDPRDialog.svg)](https://jitpack.io/#MFlisar/GDPRDialog) ![Localisation](https://img.shields.io/badge/Localisation-10%2F24%20(42%25)-blue.svg)
+### Forked GDPRDialog with more features and improvements [![Release](https://jitpack.io/v/ayoubfletcher/GDPRDialog.svg)](https://jitpack.io/#ayoubfletcher/GDPRDialog) ![Localisation](https://img.shields.io/badge/Localisation-10%2F24%20(42%25)-blue.svg)
 
 Simple reusable `DialogFragment`.
 
