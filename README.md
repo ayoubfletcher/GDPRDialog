@@ -23,6 +23,7 @@ This library offers following:
 * it closes the app if the user did not give any consent (i.e if the user clicks the back button in the dialog)
 * it manages the user's selected consent decision and remembers it (including location, date and app version)
 * it automatically reshows the dialog if the user did not give any consent or if the setup defines that the app is not allowed to be used without ads and the user has not accepted ads at all yet
+* fully customizable dialog to fit your needs.
 
 ### GDPR and law safety
 
@@ -100,7 +101,7 @@ public class ExampleActivity extends AppCompatActivity implements GDPR.IGDPRCall
     }
 }
 ```
-3.b Second method without implementating GDPR.IGDPRCallback into the activity
+3.b Second method without implementing GDPR.IGDPRCallback into the activity
 ```java
 GDPR.getInstance().checkIfNeedsToBeShown(this, mSetup, new GDPR.IGDPRCallback() {
     @Override
