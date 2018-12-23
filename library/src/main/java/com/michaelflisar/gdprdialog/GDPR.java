@@ -206,11 +206,19 @@ public class GDPR {
     }
 
     /**
-     * return a quick to check if the user is within EEA or Unknown
+     * return a quick check if the user is within EEA or Unknown
      * @return true, if use is within EEA or Unknown
      */
     public boolean isUserWithinEEAOrUnknwon() {
         return getConsentState().getLocation() == IN_EAA_OR_UNKNOWN;
+    }
+
+    /**
+     * return a quick check if the consent is personalized or non-personalized
+     * @return true, if consent is personalized
+     */
+    public boolean isConsentPersonalized() {
+        return getConsentState().getConsent().isPersonalConsent();
     }
 
     /**
